@@ -1,0 +1,16 @@
+package vendor.qti.hardware.radio.qcrilhook@1.0;
+
+import vendor.qti.hardware.radio.qcrilhook@1.0::types;
+
+/**
+ * Interface declaring response functions to solicited oem hook requests.
+ * Response functions defined in this interface are as per following convention:
+ * <xyz>Response is response to IQtiOemHook.<xyz>
+ */
+interface IQtiOemHookResponse {
+    /**
+     * @param info Response info struct containing response type, serial no. and error
+     * @param data data returned by oem
+     */
+    oneway oemHookRawResponse(int32_t serial, RadioError error, vec<uint8_t> data);
+};

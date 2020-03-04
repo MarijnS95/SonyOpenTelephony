@@ -1,0 +1,6 @@
+package vendor.qti.hardware.radio.qcrilhook@1.0;
+
+import android.hardware.radio@1.0::types;
+
+enum RadioError : android.hardware.radio@1.0::RadioError {
+};

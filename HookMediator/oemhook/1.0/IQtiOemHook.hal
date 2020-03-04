@@ -1,0 +1,24 @@
+package vendor.qti.hardware.radio.qcrilhook@1.0;
+
+import IQtiOemHookResponse;
+import IQtiOemHookIndication;
+
+interface IQtiOemHook {
+    /**
+     * Set response functions for oem hook requests & oem hook indications.
+     *
+     * @param oemHookResponse Object containing response functions
+     * @param oemHookIndication Object containing oem hook indications
+     */
+    oneway setCallback(IQtiOemHookResponse oemHookResponse, IQtiOemHookIndication oemHookIndication);
+
+    /**
+     * This request passes raw byte arrays between framework and vendor code.
+     *
+     * @param serial Serial number of request.
+     * @param data data passed as raw bytes
+     *
+     * Response function is IQtiOemHookResponse.oemHookRawResponse()
+     */
+    oneway oemHookRawRequest(int32_t serial, vec<uint8_t> data);
+};

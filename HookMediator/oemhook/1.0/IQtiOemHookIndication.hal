@@ -1,0 +1,13 @@
+package vendor.qti.hardware.radio.qcrilhook@1.0;
+
+/**
+ * Interface declaring unsolicited oem hook indications.
+ */
+interface IQtiOemHookIndication {
+   /**
+    * This is for OEM specific use.
+    *
+    * @param data data passed as raw bytes
+    */
+   oneway oemHookRawIndication(vec<uint8_t> data);
+};
