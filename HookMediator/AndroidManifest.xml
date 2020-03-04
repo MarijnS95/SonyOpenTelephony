@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    coreApp="true"
+    package="com.sony.opentelephony.hookmediator"
+    android:sharedUserId="android.uid.phone"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application android:directBootAware="true">
+        <service android:name=".HookMediatorService" />
+    </application>
+</manifest>

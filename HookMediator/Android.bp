@@ -1,0 +1,15 @@
+android_app {
+    name: "HookMediator",
+    certificate: "platform",
+
+    proprietary: true,
+
+    srcs: ["src/**/*.kt"],
+
+    static_libs: [
+        "android.hardware.radio.deprecated-V1.0-java",
+        "vendor.qti.hardware.radio.qcrilhook-V1.0-java",
+    ],
+
+    sdk_version: "system_current",
+}
