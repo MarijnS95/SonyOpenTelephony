@@ -7,6 +7,7 @@ android_app {
     srcs: ["src/**/*.kt"],
 
     static_libs: [
+        "HookMediator_aidl-java",
         "android.hardware.radio.deprecated-V1.0-java",
         "vendor.qti.hardware.radio.qcrilhook-V1.0-java",
     ],
