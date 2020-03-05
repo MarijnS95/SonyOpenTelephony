@@ -18,35 +18,84 @@ package com.sony.opentelephony.hookmediator
 
 import android.app.Service
 import android.content.Intent
-import android.os.IBinder
 import android.util.Log
+import vendor.qti.hardware.radio.qcrilhook.V1_0.RadioError
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-private const val TAG = "HookMediator-Service"
+private const val TAG = "HookMediatorService"
+
+typealias ResponseData = ArrayList<Byte>
+
+private fun prepareBuffer(request: Int, requestSize: Int): ByteBuffer {
+    val buf = ByteBuffer.allocate(OEM_IDENTIFIER.length
+            + Int.SIZE_BYTES * 2
+            + requestSize)
+    buf.order(ByteOrder.nativeOrder())
+    buf.put(OEM_IDENTIFIER.toByteArray(Charsets.US_ASCII))
+    buf.putInt(request)
+    buf.putInt(requestSize)
+    return buf
+}
 
 class HookMediatorService : Service() {
     private val responseHandler = object : IGenericOemHookResponse {
-        override fun onResponse(requestId: Int, error: Int, data: ArrayList<Byte>) {
-            val client = requests[requestId]
-            if (client == null)
+        override fun onResponse(requestId: Int, error: Int, data: ResponseData) {
+            val fut = requests.remove(requestId)
+            if (fut == null) {
                 Log.w(TAG, "No client for request $requestId")
+                return
+            }
+
+            if (error != RadioError.NONE) {
+                Log.e(TAG, "TODO: Should complete $fut with exception ${RadioError.toString(error)}")
+                // fut.completeExceptionally()
+            }
+
+            fut.complete(data)
         }
     }
     private val oemHooks = hashMapOf<Int, IGenericOemHook>()
-    private var sNextSerial = AtomicInteger(1000)
+    private var sNextSerial = AtomicInteger(0)
+    private val requests = ConcurrentHashMap<Int, CompletableFuture<ResponseData>>()
 
     private fun getOemHookBySlot(slotId: Int) = oemHooks.getOrPut(slotId, { getOemHook(slotId, responseHandler) })
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    private val binder = object : IHooks.Stub() {
+        override fun setTransmitPower(key: Int, value: Int) {
+            Log.d(TAG, "TransmitPower request $key = $value")
+            val buf = prepareBuffer(OEMHOOK_EVT_HOOK_SET_TRANSMIT_POWER, Int.SIZE_BYTES * 2)
+            buf.putInt(key)
+            buf.putInt(value)
+            // TODO: To what slot should the backoff request go? Perhaps both?
+            sendRequest(0, buf)
+            // TODO: Block and/or return anything?
+        }
 
-    class Client
+        override fun sendCommand(slotId: Int, command: ByteArray?): ByteArray? {
+            if (command == null) {
+                Log.e(TAG, "Command is null!")
+                return null
+            }
+            return sendRequest(slotId, command).get().toByteArray()
+        }
+    }
 
-    private val requests = hashMapOf<Int, Client>()
+    override fun onBind(intent: Intent?) = binder
 
-    private fun sendRequest(slotId: Int, forClient: Client, data: ArrayList<Byte>) {
+    private fun sendRequest(slotId: Int, data: ByteBuffer) = sendRequest(slotId, data.array())
+
+    private fun sendRequest(slotId: Int, data: ByteArray) = sendRequest(slotId, ResponseData().also { data.toCollection(it) })
+
+    private fun sendRequest(slotId: Int, data: ResponseData): CompletableFuture<ResponseData> {
         val requestId = sNextSerial.getAndUpdate { (it + 1) % Integer.MAX_VALUE }
-        requests[requestId] = forClient
+        val fut = CompletableFuture<ResponseData>()
+        requests[requestId] = fut
         val oemHook = getOemHookBySlot(slotId)
         oemHook.sendCommand(requestId, data)
+        return fut
     }
 }

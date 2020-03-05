@@ -1,0 +1,7 @@
+aidl_interface {
+    name: "HookMediator_aidl",
+
+    proprietary: true,
+
+    srcs: ["**/*.aidl"],
+}
