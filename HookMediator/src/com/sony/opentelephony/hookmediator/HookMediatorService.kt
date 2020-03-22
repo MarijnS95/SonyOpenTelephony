@@ -82,6 +82,16 @@ class HookMediatorService : Service() {
             }
             return sendRequest(slotId, command).get().toByteArray()
         }
+
+        override fun sendProtobufCommand(slotId: Int, command: ByteArray?): ByteArray? {
+            if (command == null) {
+                Log.e(TAG, "Protobuf command is null!")
+                return null
+            }
+            val buf = prepareBuffer(OEMHOOK_EVT_HOOK_PROTOBUF_MSG, command.size)
+            buf.put(command)
+            return sendRequest(slotId, buf).get().toByteArray()
+        }
     }
 
     override fun onBind(intent: Intent?) = binder

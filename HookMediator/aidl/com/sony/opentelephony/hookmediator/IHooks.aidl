@@ -19,6 +19,7 @@ package com.sony.opentelephony.hookmediator;
 interface IHooks {
     oneway void setTransmitPower(int key, int value);
     byte[] sendCommand(int slotId, in byte[] command);
+    byte[] sendProtobufCommand(int slotId, in byte[] command);
 
     // TODO: Async responses
     // oneway void setCallback(...);
