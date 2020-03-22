@@ -1,0 +1,11 @@
+java_library {
+    name: "imshelper-protos-lite",
+
+    vendor: true,
+    sdk_version: "system_current",
+
+    proto: {
+        type: "lite",
+    },
+    srcs: ["*.proto"],
+}
