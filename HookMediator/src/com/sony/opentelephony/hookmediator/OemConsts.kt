@@ -18,5 +18,6 @@ package com.sony.opentelephony.hookmediator
 
 // OEMHOOK protocol constants
 const val OEMHOOK_BASE = 0x80000
+const val OEMHOOK_EVT_HOOK_PROTOBUF_MSG = OEMHOOK_BASE + 101
 const val OEMHOOK_EVT_HOOK_SET_TRANSMIT_POWER = OEMHOOK_BASE + 201
 const val OEM_IDENTIFIER = "QOEMHOOK"

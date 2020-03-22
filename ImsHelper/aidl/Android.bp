@@ -1,0 +1,7 @@
+aidl_interface {
+    name: "ImsHelper_aidl",
+
+    proprietary: true,
+
+    srcs: ["**/*.aidl"],
+}
