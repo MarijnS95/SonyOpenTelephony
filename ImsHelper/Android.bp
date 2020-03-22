@@ -1,0 +1,16 @@
+android_app {
+    name: "ImsHelper",
+    certificate: "platform",
+
+    proprietary: true,
+
+    srcs: ["src/**/*.kt"],
+
+    static_libs: [
+        "HookMediator_aidl-java",
+        "ImsHelper_aidl-java",
+        "imshelper-protos-lite",
+    ],
+
+    sdk_version: "system_current",
+}
