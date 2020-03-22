@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package com.sony.opentelephony;
+
+// option java_outer_classname = "PowerStateProto";
+// option java_multiple_files = true;
+
+enum Magic1 {
+    Magic1_0 = 0;
+    Magic1_1 = 1;
+    Magic1_2 = 2;
+}
+
+enum Magic2 {
+    Magic2_0 = 0;
+    Magic2_1 = 1;
+    Magic2_2 = 2;
+    Magic2_3 = 3;
+    Magic2_4 = 4;
+    Magic2_5 = 5;
+}
+
+enum Magic3 {
+    Magic3_0 = 0;
+    Magic3_1 = 1;
+}
+
+enum MessageError {
+    STATUS_SUCCESS = 0;
+    STATUS_GENERIC_FAILURE = 1;
+    STATUS_NOT_SUPPORTED = 2;
+    STATUS_INVALID_PARAMETER = 3;
+}
+
+enum MessageType {
+    MESSAGE_UNDEFINED = 0;
+    MESSAGE_REQUEST = 1;
+    MESSAGE_RESPONSE = 2;
+    MESSAGE_INDICATION = 3;
+}
+
+enum Magic4 {
+    CMD_0 = 0;
+    CMD_1 = 1;
+    CMD_2 = 2;
+}
+
+message Command1Req {
+    Magic1 slotId = 1;
+    Magic2 appl = 2;
+    bool secure = 3;
+}
+
+message Command1Res {
+    bytes data = 1;
+}
+
+message Command2Req {
+    bytes sp = 1;
+    string nqdn = 2;
+    Magic1 slotId = 3;
+    Magic2 appl = 4;
+    bool bs = 5;
+}
+
+message Command2Res {
+    Magic3 typ = 1;
+    bytes resp = 2;
+    bytes data = 3;
+    string btrxId = 4;
+    string lt = 5;
+}
+
+message RilOemMessage {
+    fixed32 token = 1;
+    MessageType type = 2;
+    Magic4 id = 3;
+    MessageError error = 4;
+    bytes payload = 5;
+}
