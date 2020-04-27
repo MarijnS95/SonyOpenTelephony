@@ -32,8 +32,10 @@ class HookMediatorService : Service() {
                 Log.w(TAG, "No client for request $requestId")
         }
     }
-    private val oemHook by lazy { getOemHook(responseHandler) }
+    private val oemHooks = hashMapOf<Int, IGenericOemHook>()
     private var sNextSerial = AtomicInteger(1000)
+
+    private fun getOemHookBySlot(slotId: Int) = oemHooks.getOrPut(slotId, { getOemHook(slotId, responseHandler) })
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -41,9 +43,10 @@ class HookMediatorService : Service() {
 
     private val requests = hashMapOf<Int, Client>()
 
-    private fun sendRequest(forClient: Client, data: ArrayList<Byte>) {
+    private fun sendRequest(slotId: Int, forClient: Client, data: ArrayList<Byte>) {
         val requestId = sNextSerial.getAndUpdate { (it + 1) % Integer.MAX_VALUE }
         requests[requestId] = forClient
+        val oemHook = getOemHookBySlot(slotId)
         oemHook.sendCommand(requestId, data)
     }
 }
