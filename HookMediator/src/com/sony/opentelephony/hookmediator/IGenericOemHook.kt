@@ -26,14 +26,20 @@ import vendor.qti.hardware.radio.qcrilhook.V1_0.RadioError
 
 private const val TAG = "HookMediator-Generic"
 
-internal fun getOemHook(responseHandler: IGenericOemHookResponse): IGenericOemHook {
+/**
+ * Retrieves
+ *
+ * @param slotId Zero-based slot/card index
+ */
+internal fun getOemHook(slotId: Int, responseHandler: IGenericOemHookResponse): IGenericOemHook {
     return try {
-        val qtiOemHook = IQtiOemHook.getService("oemhook0")
+        val qtiOemHook = IQtiOemHook.getService("oemhook$slotId")
         Log.i(TAG, "Using IQtiOemHook $qtiOemHook")
         QtiOemHook(responseHandler, qtiOemHook)
     } catch (unused: NoSuchElementException) {
-        Log.w(TAG, "Failed to get IQtiOemHook, falling back to deprecated IOemHook")
-        val oemHook = IOemHook.getService("slot1")
+        Log.w(TAG, "Failed to get IQtiOemHook$slotId, falling back to deprecated IOemHook")
+        // IOemHook has a one-based index:
+        val oemHook = IOemHook.getService("slot${slotId + 1}")
         Log.d(TAG, "Using IOemHook $oemHook")
         AndroidOemHook(responseHandler, oemHook)
     }
