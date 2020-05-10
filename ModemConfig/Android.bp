@@ -1,0 +1,11 @@
+android_app {
+    name: "ModemConfig",
+    certificate: "platform",
+
+    proprietary: true,
+    privileged: true,
+
+    srcs: ["src/**/*.kt"],
+
+    sdk_version: "system_current",
+}
