@@ -5,14 +5,21 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <application android:directBootAware="true">
-        <receiver android:name=".ModemConfigReceiver">
+    <application
+        android:directBootAware="true"
+        android:persistent="true">
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true">
             <intent-filter>
-                <action android:name="android.telephony.action.DEFAULT_SUBSCRIPTION_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <service android:name=".ModemConfigService" />
     </application>
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

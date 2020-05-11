@@ -16,9 +16,10 @@
 
 package com.sony.opentelephony.modemconfig
 
-import android.content.BroadcastReceiver
+import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.IBinder
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.text.TextUtils
@@ -26,9 +27,10 @@ import android.util.Log
 import org.xmlpull.v1.XmlPullParser
 
 private const val TAG = "ModemConfigReceiver"
+private const val VERBOSE = false
 private val newlineMatch = Regex("[\n\r]")
 
-class ModemConfigReceiver : BroadcastReceiver() {
+class ModemConfigService : Service() {
     private class ProviderFilter(val sim_config_id: String,
                                  val mcc: String? = null,
                                  val mnc: String? = null,
@@ -114,7 +116,7 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         val gid1 = tm.groupIdLevel1
         val iccid2 = tm.simSerialNumber
 
-        Log.d(TAG, "Matching providers against: $sp $mcc/$mnc, imsi: $imsi, gid: $gid1, iccid2: $iccid2")
+        if (VERBOSE) Log.v(TAG, "Matching providers against: $sp $mcc/$mnc, imsi: $imsi, gid: $gid1, iccid2: $iccid2")
 
         val result = getProviders(context).filter f@{ info ->
             if (info.mcc != null && info.mcc != mcc)
@@ -147,22 +149,29 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         }
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "Received intent! $intent")
-        if (SubscriptionManager.ACTION_DEFAULT_SUBSCRIPTION_CHANGED != intent.action)
-            throw Exception("Expected ${SubscriptionManager.ACTION_DEFAULT_SUBSCRIPTION_CHANGED}, got ${intent.action}. Is the intent filter correct??")
-        val subId = intent.getIntExtra(SubscriptionManager.EXTRA_SUBSCRIPTION_INDEX, SubscriptionManager.INVALID_SUBSCRIPTION_ID)
-        if (subId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
-            Log.d(TAG, "Received invalid subId. SIM removed?")
-            return
-        }
-        val slotIdx = SubscriptionManager.getSlotIndex(subId) // Can be INVALID_SIM_SLOT_INDEX
-        if (slotIdx == SubscriptionManager.INVALID_SIM_SLOT_INDEX)
-            throw Exception("Invalid slot index")
-        Log.d(TAG, "Finding configuration for subId $subId, slotIdx: $slotIdx")
+    override fun onCreate() {
+        Log.e(TAG, "Starting")
+        val sm = getSystemService(SubscriptionManager::class.java)
+                ?: throw Exception("Expected SubscriptionManager, got null")
 
-        val globalTm = context.getSystemService(TelephonyManager::class.java)
-        val tm = globalTm!!.createForSubscriptionId(subId)
-        val name = findConfigurationName(context, tm)
+        // Our callback is invoked once on .add too; no need to execute the contents manually at startup
+        sm.addOnSubscriptionsChangedListener(object : SubscriptionManager.OnSubscriptionsChangedListener() {
+            // Even though this callback is invoked a lot (when sims are changed), apply no caching at all.
+            // The modem-switcher itself makes sure to not needlessly flash firmware - let it handle the
+            // validation.
+            override fun onSubscriptionsChanged() {
+                sm.activeSubscriptionInfoList?.let {
+                    for (sub in it) {
+                        if (VERBOSE) Log.v(TAG, "Checking sub $sub")
+
+                        val globalTm = getSystemService(TelephonyManager::class.java)
+                        val tm = globalTm!!.createForSubscriptionId(sub.subscriptionId)
+                        val name = findConfigurationName(this@ModemConfigService, tm)
+                    }
+                }
+            }
+        })
     }
+
+    override fun onBind(intent: Intent?): IBinder? = null
 }
