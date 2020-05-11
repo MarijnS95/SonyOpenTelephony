@@ -7,5 +7,5 @@ android_app {
 
     srcs: ["src/**/*.kt"],
 
-    sdk_version: "system_current",
+    platform_apis: true,
 }
