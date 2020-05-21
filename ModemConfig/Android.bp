@@ -7,5 +7,15 @@ android_app {
 
     srcs: ["src/**/*.kt"],
 
+    required: ["privapp_whitelist_com.sony.opentelephony.modemconfig"],
+
     platform_apis: true,
+}
+
+prebuilt_etc {
+    name: "privapp_whitelist_com.sony.opentelephony.modemconfig",
+    sub_dir: "permissions",
+    src: "privapp_whitelist_com.sony.opentelephony.modemconfig.xml",
+    proprietary: true,
+    filename_from_src: true,
 }
