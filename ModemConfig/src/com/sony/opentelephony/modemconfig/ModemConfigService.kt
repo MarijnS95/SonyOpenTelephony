@@ -42,6 +42,8 @@ class ModemConfigService : Service() {
     ) {
         override fun toString() = "[mcc: $mcc, mnc: $mnc, gid1: $gid1, imsi: ${imsi?.pattern}, " +
                                   "sp: ${sp?.pattern}] => $sim_config_id"
+
+        fun specificity() = listOfNotNull(mcc, mnc, gid1, imsi, sp).count()
     }
 
     // TODO: Do a lateinit here?
@@ -105,6 +107,7 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
             xml.close()
         }
 
+        list.sortByDescending { it.specificity() }
         providers = list
         return list
     }
@@ -125,7 +128,7 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         if (VERBOSE) Log.v(TAG, "Matching providers against: $sp $mcc/$mnc, imsi: $imsi" +
                                 ", gid: $gid1, iccid2: $iccid2")
 
-        val result = getProviders(context).filter f@{ info ->
+        val result = getProviders(context).firstOrNull f@{ info ->
             if (info.mcc != null && info.mcc != mcc)
                 return@f false
             if (info.mnc != null && info.mnc != mnc)
@@ -143,16 +146,12 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
             true
         }
 
-        return if (result.isEmpty()) {
+        return if (result == null) {
             Log.w(TAG, "No matching config found")
             null
         } else {
-            if (result.size > 1)
-                Log.w(TAG, "Multiple matches found: ${result}, using last")
-
-            val match = result.last()
-            Log.i(TAG, "Matched with $match")
-            match.sim_config_id
+            Log.i(TAG, "Matched with $result")
+            result.sim_config_id
         }
     }
 
