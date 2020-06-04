@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">ModemConfig</string>
+
+    <string name="modem_config_path" translatable="false">/oem/modem-config</string>
+    <string name="modem_config_name" translatable="false">modem.conf</string>
+
+    <string name="notification_channel_configuration_info">Configuration info</string>
+
+    <string name="notification_title_modem_configuration">Modem configuration</string>
+    <string name="notification_text_modem_configuration_resolved_modem_config">Using modem configuration: %1$s\nFirmware file: %2$s</string>
+    <string name="notification_text_modem_configuration_no_match">Found no modem configuration</string>
+</resources>

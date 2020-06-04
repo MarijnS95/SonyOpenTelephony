@@ -16,6 +16,9 @@
 
 package com.sony.opentelephony.modemconfig
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -27,9 +30,14 @@ import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.Log
 import org.xmlpull.v1.XmlPullParser
+import java.nio.file.Files
+import java.nio.file.Paths
 
 private const val TAG = "ModemConfigReceiver"
 private const val VERBOSE = false
+private const val NOTIFICATION_CHANNEL_ID = "Configuration"
+private const val NOTIFICATION_ID = 1
+
 private val newlineMatch = Regex("[\n\r]")
 
 class ModemConfigService : Service() {
@@ -48,6 +56,11 @@ class ModemConfigService : Service() {
 
     // TODO: Do a lateinit here?
     private /*lateinit*/ var providers: List<ProviderFilter>? = null
+
+    private val notificationManager: NotificationManager by lazy {
+        getSystemService(NotificationManager::class.java)
+        ?: throw Exception("Expected NotificationManager, got null")
+    }
 
     private fun getProviders(context: Context): List<ProviderFilter> {
         if (providers != null)
@@ -155,6 +168,21 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         }
     }
 
+    private fun findFirmwarePath(configId: String): String {
+        val conf = Paths.get(resources.getString(R.string.modem_config_path), configId,
+                             resources.getString(R.string.modem_config_name))
+        return try {
+            if (Files.isRegularFile(conf)) {
+                Files.readAllLines(conf).first()
+            } else {
+                // TODO: Can/should we read default from modem-switcher prop?
+                "default"
+            }
+        } catch (e: Exception) {
+            "failed to derive"
+        }
+    }
+
     private fun handleSubscription(sub: SubscriptionInfo) {
         if (VERBOSE) Log.v(TAG, "Checking sub $sub")
 
@@ -162,17 +190,40 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         val tm = globalTm!!.createForSubscriptionId(sub.subscriptionId)
         val name = findConfigurationName(this, tm)
 
-        if (name != null) {
+        val notificationText = if (name != null) {
             val prop = "persist.vendor.somc.cust.modem${sub.simSlotIndex}"
             if (VERBOSE) Log.v(TAG, "Setting $prop to $name")
             SystemProperties.set(prop, name)
+
+            resources.getString(
+                    R.string.notification_text_modem_configuration_resolved_modem_config,
+                    name,
+                    findFirmwarePath(name))
+        } else {
+            resources.getString(R.string.notification_text_modem_configuration_no_match)
         }
+
+        val notification = Notification.Builder(this, NOTIFICATION_CHANNEL_ID).run {
+            setSmallIcon(R.drawable.ic_sim_card)
+            setContentTitle(resources.getString(R.string.notification_title_modem_configuration))
+            setContentText(notificationText.substringBefore('\n'))
+            style = Notification.BigTextStyle().bigText(notificationText)
+            build()
+        }
+
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
     override fun onCreate() {
         Log.e(TAG, "Starting")
         val sm = getSystemService(SubscriptionManager::class.java)
                  ?: throw Exception("Expected SubscriptionManager, got null")
+
+        val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                resources.getString(R.string.notification_channel_configuration_info),
+                NotificationManager.IMPORTANCE_LOW)
+        notificationManager.createNotificationChannel(channel)
 
         // Our callback is invoked once on .add too; no need to run the contents manually at startup
         sm.addOnSubscriptionsChangedListener(
