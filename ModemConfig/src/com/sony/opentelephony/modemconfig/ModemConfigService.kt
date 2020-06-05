@@ -109,7 +109,7 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
                 } else if (simConfigId != null) {
                     // If not in a service_provider_sim_config element, and a valid simConfigId
                     // /exists parse all members/subelements:
-                    val text = cleanString(xml.nextText())
+                    val text = xml.nextText().cleanString()
                     if (currentMap.containsKey(xml.name))
                         throw Exception("Already parsed ${xml.name}!")
                     currentMap[xml.name] = text
@@ -125,21 +125,27 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         return list
     }
 
-    private fun cleanString(str: String) = str.replace(newlineMatch, "").trim()
+    private fun String.cleanString() = replace(newlineMatch, "").trim()
 
     private fun findConfigurationName(context: Context, tm: TelephonyManager): String? {
         val operator = tm.simOperator
-        val mcc = operator.substring(0, 3)
-        val mnc = operator.substring(3)
+        if (operator.isNullOrEmpty()) {
+            Log.d(TAG, "Operator is null or empty")
+            return null
+        }
+        val mcc = operator.take(3)
+        val mnc = operator.drop(3)
 
-        val sp = cleanString(tm.simOperatorName)
-
+        val sp = tm.simOperatorName?.cleanString() ?: ""
+        val gid1 = tm.groupIdLevel1 ?: ""
         val imsi = tm.subscriberId
-        val gid1 = tm.groupIdLevel1
-        val iccid2 = tm.simSerialNumber
+        if (imsi.isNullOrEmpty()) {
+            Log.d(TAG, "Imsi is null or empty")
+            return null
+        }
 
         if (VERBOSE) Log.v(TAG, "Matching providers against: $sp $mcc/$mnc, imsi: $imsi" +
-                                ", gid: $gid1, iccid2: $iccid2")
+                                ", gid: $gid1")
 
         val result = getProviders(context).firstOrNull f@{ info ->
             if (info.mcc != null && info.mcc != mcc)
