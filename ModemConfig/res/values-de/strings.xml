@@ -3,6 +3,7 @@
     <string name="notification_channel_configuration_info">Konfigurationsinfo</string>
 
     <string name="notification_title_modem_configuration">Modem-Konfiguration</string>
-    <string name="notification_text_modem_configuration_resolved_modem_config">Benutze Modem-Konfiguration: %1$s\nFirmware-Datei: %2$s</string>
+    <string name="notification_title_slot_index">Steckplatz %1$s</string>
+    <string name="notification_text_modem_configuration_resolved_modem_config">Modem-Konfiguration: %1$s\nFirmware-Datei: %2$s</string>
     <string name="notification_text_modem_configuration_no_match">Keine passende Modem-Konfiguration gefunden</string>
 </resources>

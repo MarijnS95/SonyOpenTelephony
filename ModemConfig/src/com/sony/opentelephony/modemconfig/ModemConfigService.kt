@@ -36,7 +36,9 @@ import java.nio.file.Paths
 private const val TAG = "ModemConfigReceiver"
 private const val VERBOSE = false
 private const val NOTIFICATION_CHANNEL_ID = "Configuration"
+private const val NOTIFICATION_GROUP_KEY_SLOTS = "com.sony.opentelephony.modemconfig.slot_result"
 private const val NOTIFICATION_ID = 1
+private const val NOTIFICATION_ID_SLOT_BASE = 1000
 
 private val newlineMatch = Regex("[\n\r]")
 
@@ -209,15 +211,25 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
             resources.getString(R.string.notification_text_modem_configuration_no_match)
         }
 
-        val notification = Notification.Builder(this, NOTIFICATION_CHANNEL_ID).run {
-            setSmallIcon(R.drawable.ic_sim_card)
-            setContentTitle(resources.getString(R.string.notification_title_modem_configuration))
-            setContentText(notificationText.substringBefore('\n'))
-            style = Notification.BigTextStyle().bigText(notificationText)
-            build()
-        }
+        val notification = Notification.Builder(
+                this@ModemConfigService,
+                NOTIFICATION_CHANNEL_ID)
+                .run {
+                    setSmallIcon(R.drawable.ic_sim_card)
+                    setContentTitle(resources.getString(
+                            R.string.notification_title_slot_index,
+                            sub.simSlotIndex))
+                    setContentText(notificationText.substringBefore('\n'))
+                    setGroup(NOTIFICATION_GROUP_KEY_SLOTS)
+                    setSortKey(sub.simSlotIndex.toString())
+                    style = Notification.BigTextStyle()
+                            .bigText(notificationText)
+                    build()
+                }
 
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(NOTIFICATION_ID_SLOT_BASE
+                                   + sub.simSlotIndex,
+                                   notification)
     }
 
     override fun onCreate() {
@@ -238,7 +250,28 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
                     // caching at all. The modem-switcher itself makes sure to not needlessly flash
                     // firmware - let it handle the validation.
                     override fun onSubscriptionsChanged() {
-                        sm.activeSubscriptionInfoList?.forEach(::handleSubscription)
+                        sm.activeSubscriptionInfoList?.run {
+                            if (any()) {
+                                val groupSummaryNotification = Notification.Builder(
+                                        this@ModemConfigService,
+                                        NOTIFICATION_CHANNEL_ID)
+                                        .run {
+                                            setSmallIcon(R.drawable.ic_sim_card)
+                                            setContentTitle(resources.getString(
+                                                    R.string.notification_title_modem_configuration
+                                            ))
+                                            setGroup(NOTIFICATION_GROUP_KEY_SLOTS)
+                                            setGroupSummary(true)
+                                            build()
+                                        }
+
+                                notificationManager.notify(NOTIFICATION_ID,
+                                                           groupSummaryNotification)
+                            }
+
+                            forEach(::handleSubscription)
+                        }
+
                     }
                 })
     }
