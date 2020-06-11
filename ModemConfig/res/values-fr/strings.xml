@@ -3,6 +3,7 @@
     <string name="notification_channel_configuration_info">Informations de configuration</string>
 
     <string name="notification_title_modem_configuration">Configuration du modem</string>
-    <string name="notification_text_modem_configuration_resolved_modem_config">Configuration du modem utilisée : %1$s\nFirmware utilisé: %2$s</string>
-    <string name="notification_text_modem_configuration_no_match">Aucune configuration de modem trouvée </string>
+    <string name="notification_title_slot_index">Port SIM %1$s</string>
+    <string name="notification_text_modem_configuration_resolved_modem_config">Configuration du modem utilisée : %1$s\n Chemin d\'accès du firmware : %2$s</string>
+    <string name="notification_text_modem_configuration_no_match">Aucune configuration modem Trouvée</string>
 </resources>

@@ -36,7 +36,9 @@ import java.nio.file.Paths
 private const val TAG = "ModemConfigReceiver"
 private const val VERBOSE = false
 private const val NOTIFICATION_CHANNEL_ID = "Configuration"
+private const val NOTIFICATION_GROUP_KEY_SLOTS = "com.sony.opentelephony.modemconfig.slot_result"
 private const val NOTIFICATION_ID = 1
+private const val NOTIFICATION_ID_SLOT_BASE = 1000
 
 private val newlineMatch = Regex("[\n\r]")
 
@@ -109,7 +111,7 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
                 } else if (simConfigId != null) {
                     // If not in a service_provider_sim_config element, and a valid simConfigId
                     // /exists parse all members/subelements:
-                    val text = cleanString(xml.nextText())
+                    val text = xml.nextText().cleanString()
                     if (currentMap.containsKey(xml.name))
                         throw Exception("Already parsed ${xml.name}!")
                     currentMap[xml.name] = text
@@ -125,21 +127,27 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         return list
     }
 
-    private fun cleanString(str: String) = str.replace(newlineMatch, "").trim()
+    private fun String.cleanString() = replace(newlineMatch, "").trim()
 
     private fun findConfigurationName(context: Context, tm: TelephonyManager): String? {
         val operator = tm.simOperator
-        val mcc = operator.substring(0, 3)
-        val mnc = operator.substring(3)
+        if (operator.isNullOrEmpty()) {
+            Log.d(TAG, "Operator is null or empty")
+            return null
+        }
+        val mcc = operator.take(3)
+        val mnc = operator.drop(3)
 
-        val sp = cleanString(tm.simOperatorName)
-
+        val sp = tm.simOperatorName?.cleanString() ?: ""
+        val gid1 = tm.groupIdLevel1 ?: ""
         val imsi = tm.subscriberId
-        val gid1 = tm.groupIdLevel1
-        val iccid2 = tm.simSerialNumber
+        if (imsi.isNullOrEmpty()) {
+            Log.d(TAG, "Imsi is null or empty")
+            return null
+        }
 
         if (VERBOSE) Log.v(TAG, "Matching providers against: $sp $mcc/$mnc, imsi: $imsi" +
-                                ", gid: $gid1, iccid2: $iccid2")
+                                ", gid: $gid1")
 
         val result = getProviders(context).firstOrNull f@{ info ->
             if (info.mcc != null && info.mcc != mcc)
@@ -203,15 +211,22 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
             resources.getString(R.string.notification_text_modem_configuration_no_match)
         }
 
-        val notification = Notification.Builder(this, NOTIFICATION_CHANNEL_ID).run {
-            setSmallIcon(R.drawable.ic_sim_card)
-            setContentTitle(resources.getString(R.string.notification_title_modem_configuration))
-            setContentText(notificationText.substringBefore('\n'))
-            style = Notification.BigTextStyle().bigText(notificationText)
-            build()
-        }
+        val notification = Notification.Builder(this@ModemConfigService,
+                                                NOTIFICATION_CHANNEL_ID)
+                .run {
+                    setSmallIcon(R.drawable.ic_sim_card)
+                    setContentTitle(resources.getString(
+                            R.string.notification_title_slot_index,
+                            sub.simSlotIndex))
+                    setContentText(notificationText.substringBefore('\n'))
+                    setGroup(NOTIFICATION_GROUP_KEY_SLOTS)
+                    setSortKey(sub.simSlotIndex.toString())
+                    style = Notification.BigTextStyle()
+                            .bigText(notificationText)
+                    build()
+                }
 
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(NOTIFICATION_ID_SLOT_BASE + sub.simSlotIndex, notification)
     }
 
     override fun onCreate() {
@@ -222,7 +237,7 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 resources.getString(R.string.notification_channel_configuration_info),
-                NotificationManager.IMPORTANCE_LOW)
+                NotificationManager.IMPORTANCE_MIN)
         notificationManager.createNotificationChannel(channel)
 
         // Our callback is invoked once on .add too; no need to run the contents manually at startup
@@ -232,7 +247,27 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
                     // caching at all. The modem-switcher itself makes sure to not needlessly flash
                     // firmware - let it handle the validation.
                     override fun onSubscriptionsChanged() {
-                        sm.activeSubscriptionInfoList?.forEach(::handleSubscription)
+                        sm.activeSubscriptionInfoList?.run {
+                            if (any()) {
+                                val summaryNotification = Notification.Builder(
+                                        this@ModemConfigService,
+                                        NOTIFICATION_CHANNEL_ID)
+                                        .run {
+                                            setSmallIcon(R.drawable.ic_sim_card)
+                                            setContentTitle(resources.getString(
+                                                    R.string.notification_title_modem_configuration
+                                            ))
+                                            setGroup(NOTIFICATION_GROUP_KEY_SLOTS)
+                                            setGroupSummary(true)
+                                            build()
+                                        }
+
+                                notificationManager.notify(NOTIFICATION_ID, summaryNotification)
+                            }
+
+                            forEach(::handleSubscription)
+                        }
+
                     }
                 })
     }

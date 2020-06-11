@@ -3,6 +3,7 @@
     <string name="notification_channel_configuration_info">Informazioni configurazione</string>
 
     <string name="notification_title_modem_configuration">Configurazione Modem</string>
-    <string name="notification_text_modem_configuration_resolved_modem_config">Uso configurazione modem %1$s\nFile firmware: %2%$s</string>
+    <string name="notification_title_slot_index">Slot %1$s</string>
+    <string name="notification_text_modem_configuration_resolved_modem_config">Configurazione modem: %1$s\nFile firmware: %2$s</string>
     <string name="notification_text_modem_configuration_no_match">Nessuna configurazione modem trovata</string>
 </resources>
