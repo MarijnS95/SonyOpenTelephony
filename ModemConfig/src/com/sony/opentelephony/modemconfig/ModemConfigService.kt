@@ -168,8 +168,8 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         }
 
         return if (result == null) {
-            Log.w(TAG, "No matching config found")
-            null
+            Log.w(TAG, "No matching config found, falling back to generic IMS")
+            "S9999.9"
         } else {
             Log.i(TAG, "Matched with $result")
             result.sim_config_id
