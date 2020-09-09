@@ -73,16 +73,7 @@ class ModemConfigService : Service() {
         val currentMap = hashMapOf<String, String>()
         var simConfigId: String? = null
 
-        // TODO: Kotlin .use {} block doesn't work here, while it does in regular apps...
-        /*
-modemconfig/ModemConfigReceiver.kt:63:70: error: unresolved reference. None of the following
-    candidates is applicable because of receiver type mismatch:
-@InlineOnly public inline fun <T : Closeable?, R> ???.use(block: (???) -> ???): ???
-    defined in kotlin.io
-context.resources.getXml(R.xml.service_provider_sim_configs).use {
-         */
-        val xml = context.resources.getXml(R.xml.service_provider_sim_configs)
-        try {
+        context.resources.getXml(R.xml.service_provider_sim_configs).use { xml ->
             while (xml.next() != XmlPullParser.END_DOCUMENT) {
                 if (xml.eventType == XmlPullParser.END_TAG &&
                     xml.name == "service_provider_sim_config") {
@@ -117,9 +108,6 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
                     currentMap[xml.name] = text
                 }
             }
-
-        } finally {
-            xml.close()
         }
 
         list.sortByDescending { it.specificity() }
