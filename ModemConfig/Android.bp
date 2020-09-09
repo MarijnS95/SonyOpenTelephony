@@ -9,6 +9,8 @@ android_app {
 
     required: ["privapp_whitelist_com.sony.opentelephony.modemconfig"],
 
+    libs: ["SomcModemProperties"],
+
     sdk_version: "system_current",
 }
 

@@ -28,6 +28,7 @@ import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.Log
+import com.sony.opentelephony.modemconfig.SomcModemProperties
 import org.xmlpull.v1.XmlPullParser
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -198,6 +199,14 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         val name = findConfigurationName(this, tm)
 
         val notificationText = if (name != null) {
+            val prop = "persist.somc.cust.modem${sub.simSlotIndex}"
+            Log.d(TAG, "Setting $prop to $name")
+            when (sub.simSlotIndex) {
+                0 -> SomcModemProperties.cust_modem_0(name)
+                1 -> SomcModemProperties.cust_modem_1(name)
+                else -> throw Exception("Unknown slotIdx ${sub.simSlotIndex}")
+            }
+
             resources.getString(
                     R.string.notification_text_modem_configuration_resolved_modem_config,
                     name,
