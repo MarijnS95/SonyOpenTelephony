@@ -1,0 +1,18 @@
+module: "com.sony.opentelephony.modemconfig.SomcModemProperties"
+owner: Vendor
+
+prop {
+    api_name: "cust_modem_0"
+    type: String
+    scope: Internal
+    access: ReadWrite
+    prop_name: "vendor.somc.cust.modem0"
+}
+
+prop {
+    api_name: "cust_modem_1"
+    type: String
+    scope: Internal
+    access: ReadWrite
+    prop_name: "vendor.somc.cust.modem1"
+}

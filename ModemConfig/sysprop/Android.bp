@@ -1,0 +1,9 @@
+sysprop_library {
+    name: "SomcModemProperties",
+    proprietary: true,
+
+    srcs: ["SomcModemProperties.sysprop"],
+
+    property_owner: "Vendor",
+    api_packages: ["android.sysprop"],
+}

@@ -23,12 +23,12 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.os.SystemProperties
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.Log
+import com.sony.opentelephony.modemconfig.SomcModemProperties
 import org.xmlpull.v1.XmlPullParser
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -73,16 +73,7 @@ class ModemConfigService : Service() {
         val currentMap = hashMapOf<String, String>()
         var simConfigId: String? = null
 
-        // TODO: Kotlin .use {} block doesn't work here, while it does in regular apps...
-        /*
-modemconfig/ModemConfigReceiver.kt:63:70: error: unresolved reference. None of the following
-    candidates is applicable because of receiver type mismatch:
-@InlineOnly public inline fun <T : Closeable?, R> ???.use(block: (???) -> ???): ???
-    defined in kotlin.io
-context.resources.getXml(R.xml.service_provider_sim_configs).use {
-         */
-        val xml = context.resources.getXml(R.xml.service_provider_sim_configs)
-        try {
+        context.resources.getXml(R.xml.service_provider_sim_configs).use { xml ->
             while (xml.next() != XmlPullParser.END_DOCUMENT) {
                 if (xml.eventType == XmlPullParser.END_TAG &&
                     xml.name == "service_provider_sim_config") {
@@ -117,9 +108,6 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
                     currentMap[xml.name] = text
                 }
             }
-
-        } finally {
-            xml.close()
         }
 
         list.sortByDescending { it.specificity() }
@@ -199,9 +187,13 @@ context.resources.getXml(R.xml.service_provider_sim_configs).use {
         val name = findConfigurationName(this, tm)
 
         val notificationText = if (name != null) {
-            val prop = "persist.vendor.somc.cust.modem${sub.simSlotIndex}"
-            if (VERBOSE) Log.v(TAG, "Setting $prop to $name")
-            SystemProperties.set(prop, name)
+            val prop = "persist.somc.cust.modem${sub.simSlotIndex}"
+            Log.d(TAG, "Setting $prop to $name")
+            when (sub.simSlotIndex) {
+                0 -> SomcModemProperties.cust_modem_0(name)
+                1 -> SomcModemProperties.cust_modem_1(name)
+                else -> throw Exception("Unknown slotIdx ${sub.simSlotIndex}")
+            }
 
             resources.getString(
                     R.string.notification_text_modem_configuration_resolved_modem_config,
