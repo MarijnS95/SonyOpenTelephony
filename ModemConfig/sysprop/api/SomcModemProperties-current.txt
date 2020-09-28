@@ -6,13 +6,13 @@ props {
     type: String
     access: ReadWrite
     scope: Internal
-    prop_name: "vendor.somc.cust.modem0"
+    prop_name: "persist.vendor.somc.cust.modem0"
   }
   prop {
     api_name: "cust_modem_1"
     type: String
     access: ReadWrite
     scope: Internal
-    prop_name: "vendor.somc.cust.modem1"
+    prop_name: "persist.vendor.somc.cust.modem1"
   }
 }
