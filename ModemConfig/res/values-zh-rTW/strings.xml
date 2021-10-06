@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_configuration_info">組態資訊</string>
+
+    <string name="notification_title_modem_configuration">數據機組態</string>
+    <string name="notification_title_slot_index">依照 %1$s 排列</string>
+    <string name="notification_text_modem_configuration_resolved_modem_config">數據機組態: %1$s\n韌體檔案: %2$s</string>
+    <string name="notification_text_modem_configuration_no_match">找不到數據機組態</string>
+</resources>
