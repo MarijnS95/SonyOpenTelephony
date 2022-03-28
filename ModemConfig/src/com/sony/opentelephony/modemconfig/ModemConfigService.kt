@@ -228,6 +228,7 @@ class ModemConfigService : Service() {
                 NOTIFICATION_CHANNEL_ID,
                 resources.getString(R.string.notification_channel_configuration_info),
                 NotificationManager.IMPORTANCE_MIN)
+        channel.setBlockable(true)
         notificationManager.createNotificationChannel(channel)
 
         // Our callback is invoked once on .add too; no need to run the contents manually at startup
